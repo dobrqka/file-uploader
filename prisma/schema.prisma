@@ -33,6 +33,7 @@ model Folder {
 model File {
   id       Int      @id @default(autoincrement())
   name     String   @unique
+  path     String
   folderId Int
   folder   Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
 }

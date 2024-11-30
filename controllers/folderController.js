@@ -47,4 +47,45 @@ const createFolder = async (req, res, next) => {
   }
 };
 
-module.exports = { createFolder };
+const renameFolder = async (req, res, next) => {
+  const folderId = parseInt(req.params.id);
+  const newName = req.body.newName;
+
+  try {
+    const updatedFolder = await prisma.folder.update({
+      where: { id: folderId },
+      data: { name: newName },
+    });
+
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: { folders: true },
+    });
+
+    res.render("home", { user: updatedUser, folders: updatedUser.folders });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteFolder = async (req, res, next) => {
+  const folderId = parseInt(req.params.id);
+
+  try {
+    await prisma.folder.delete({
+      where: {
+        id: folderId,
+      },
+    });
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: { folders: true },
+    });
+
+    res.render("home", { user: updatedUser, folders: updatedUser.folders });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { createFolder, renameFolder, deleteFolder };

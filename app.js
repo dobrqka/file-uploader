@@ -33,7 +33,7 @@ app.use("/login", loginRouter);
 app.use("/file", fileRouter);
 app.use("/folder", folderRouter);
 
-const PORT = 8007;
+const PORT = 8009;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

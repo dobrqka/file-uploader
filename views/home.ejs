@@ -1,13 +1,36 @@
 <html>
   <h1>Welcome to your personal storage, <%= user.name %>!</h1>
   <form action="/file/upload" method="post" enctype="multipart/form-data">
+    <label for="folder">Select a folder</label>
+    <select name="folderId">
+      <% folders.forEach(folder => { %>
+      <option value="<%= folder.id %>"><%= folder.name %></option>
+      <% }) %>
+    </select>
     <input type="file" name="file" />
     <button>Upload</button>
   </form>
   <div>
     <ul>
       <% if (folders) { folders.forEach(folder => { %>
-      <li><%= folder.name %></li>
+      <li>
+        <%= folder.name %>
+        <form
+          action="/folder/rename/<%= folder.id %>"
+          method="post"
+          style="display: inline"
+        >
+          <input type="text" name="newName" required />
+          <button>Rename</button>
+        </form>
+        <form
+          action="/folder/delete/<%= folder.id %>"
+          method="post"
+          style="display: inline"
+        >
+          <button>Delete</button>
+        </form>
+      </li>
       <% }) } %>
     </ul>
     <div>
