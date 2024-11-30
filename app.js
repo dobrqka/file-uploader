@@ -6,6 +6,7 @@ const passport = require("passport");
 const indexRouter = require("./routes/indexRouter");
 const registerRouter = require("./routes/registerRouter");
 const loginRouter = require("./routes/loginRouter");
+const fileRouter = require("./routes/fileRouter.js");
 const app = express();
 require("./middleware/passport.js");
 
@@ -28,6 +29,7 @@ app.set("view engine", "ejs");
 app.use("/", indexRouter);
 app.use("/register", registerRouter);
 app.use("/login", loginRouter);
+app.use("/file", fileRouter);
 
 const PORT = 8005;
 app.listen(PORT, () => {
