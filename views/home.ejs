@@ -1,7 +1,21 @@
 <html>
-  <h1>Welcome, <%= user.name %>!</h1>
+  <h1>Welcome to your personal storage, <%= user.name %>!</h1>
   <form action="/file/upload" method="post" enctype="multipart/form-data">
     <input type="file" name="file" />
     <button>Upload</button>
   </form>
+  <div>
+    <ul>
+      <% if (folders) { folders.forEach(folder => { %>
+      <li><%= folder.name %></li>
+      <% }) } %>
+    </ul>
+    <div>
+      <form action="/folder/create" method="post">
+        <label for="folder">Folder name</label>
+        <input type="text" id="folder" name="folder" />
+        <button>Add</button>
+      </form>
+    </div>
+  </div>
 </html>

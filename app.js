@@ -7,6 +7,7 @@ const indexRouter = require("./routes/indexRouter");
 const registerRouter = require("./routes/registerRouter");
 const loginRouter = require("./routes/loginRouter");
 const fileRouter = require("./routes/fileRouter.js");
+const folderRouter = require("./routes/folderRouter.js");
 const app = express();
 require("./middleware/passport.js");
 
@@ -30,8 +31,9 @@ app.use("/", indexRouter);
 app.use("/register", registerRouter);
 app.use("/login", loginRouter);
 app.use("/file", fileRouter);
+app.use("/folder", folderRouter);
 
-const PORT = 8001;
+const PORT = 8007;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

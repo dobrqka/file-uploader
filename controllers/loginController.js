@@ -1,4 +1,6 @@
 const passport = require("passport");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
 const showLogin = (req, res) => {
   res.render("login");
@@ -14,11 +16,20 @@ const loginUser = (req, res, next) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    req.login(user, (err) => {
+    req.login(user, async (err) => {
       if (err) {
         return next(err);
       }
-      return res.redirect("/");
+
+      const updatedUser = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        include: { folders: true },
+      });
+
+      return res.render("home", {
+        user: updatedUser,
+        folders: updatedUser.folders,
+      });
     });
   })(req, res, next);
 };
