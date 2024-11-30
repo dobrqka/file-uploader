@@ -31,7 +31,7 @@ app.use("/register", registerRouter);
 app.use("/login", loginRouter);
 app.use("/file", fileRouter);
 
-const PORT = 8005;
+const PORT = 8001;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
