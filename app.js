@@ -11,6 +11,7 @@ const folderRouter = require("./routes/folderRouter.js");
 const app = express();
 require("./middleware/passport.js");
 
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -33,7 +34,7 @@ app.use("/login", loginRouter);
 app.use("/file", fileRouter);
 app.use("/folder", folderRouter);
 
-const PORT = 8009;
+const PORT = 8027;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

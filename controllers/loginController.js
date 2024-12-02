@@ -29,6 +29,7 @@ const loginUser = (req, res, next) => {
       return res.render("home", {
         user: updatedUser,
         folders: updatedUser.folders,
+        files: updatedUser.folders.files,
       });
     });
   })(req, res, next);

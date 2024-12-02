@@ -12,10 +12,8 @@ const newFolderValidation = [
 ];
 
 const createFolder = async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
+  // const errors = validationResult(req);
+
   const folderName = req.body.folder;
   try {
     const existingFolder = await prisma.folder.findFirst({
@@ -35,13 +33,7 @@ const createFolder = async (req, res, next) => {
         userId: req.user.id,
       },
     });
-
-    const updatedUser = await prisma.user.findUnique({
-      where: { id: req.user.id },
-      include: { folders: true },
-    });
-
-    res.render("home", { user: updatedUser, folders: updatedUser.folders });
+    res.json({ success: true, folder: folder });
   } catch (error) {
     next(error);
   }
@@ -77,12 +69,13 @@ const deleteFolder = async (req, res, next) => {
         id: folderId,
       },
     });
-    const updatedUser = await prisma.user.findUnique({
-      where: { id: req.user.id },
-      include: { folders: true },
-    });
+    // const updatedUser = await prisma.user.findUnique({
+    //   where: { id: req.user.id },
+    //   include: { folders: true },
+    // });
 
-    res.render("home", { user: updatedUser, folders: updatedUser.folders });
+    // res.render("home", { user: updatedUser, folders: updatedUser.folders });
+    res.json({ success: true });
   } catch (error) {
     next(error);
   }
