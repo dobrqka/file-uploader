@@ -49,12 +49,7 @@ const renameFolder = async (req, res, next) => {
       data: { name: newName },
     });
 
-    const updatedUser = await prisma.user.findUnique({
-      where: { id: req.user.id },
-      include: { folders: true },
-    });
-
-    res.render("home", { user: updatedUser, folders: updatedUser.folders });
+    res.json({ success: true });
   } catch (error) {
     next(error);
   }
@@ -69,12 +64,7 @@ const deleteFolder = async (req, res, next) => {
         id: folderId,
       },
     });
-    // const updatedUser = await prisma.user.findUnique({
-    //   where: { id: req.user.id },
-    //   include: { folders: true },
-    // });
 
-    // res.render("home", { user: updatedUser, folders: updatedUser.folders });
     res.json({ success: true });
   } catch (error) {
     next(error);

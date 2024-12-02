@@ -29,15 +29,16 @@ const uploadFile = (req, res) => {
         },
       });
 
-      res.status(200).json({
-        message: "File uploaded successfully",
-        file: {
-          filename: req.file.filename,
-          originalName: req.file.originalname,
-          path: req.file.path,
-          size: req.file.size,
-        },
-      });
+      // res.status(200).json({
+      //   message: "File uploaded successfully",
+      //   file: {
+      //     filename: req.file.filename,
+      //     originalName: req.file.originalname,
+      //     path: req.file.path,
+      //     size: req.file.size,
+      //   },
+      // });
+      res.json({ success: true });
     } catch (error) {
       res.status(500).json({
         message: "Error saving file to the database",

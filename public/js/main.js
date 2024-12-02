@@ -114,3 +114,57 @@ document.getElementById("delete-btn").addEventListener("click", () => {
       .catch((error) => console.error("Error:", error));
   }
 });
+
+document.getElementById("rename-btn").addEventListener("click", () => {
+  if (selectedFolderId) {
+    const newName = prompt("Please insert the new name of your folder.");
+
+    fetch(`/folder/rename/${selectedFolderId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ newName }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          alert("Folder renamed successfully!");
+          const folderElement = document.querySelector(
+            `#folder-${selectedFolderId}>span`
+          );
+          folderElement.textContent = newName;
+          selectedFolderId = null;
+          toggleToolbarButtons();
+        } else {
+          alert("Failed to delete folder.");
+        }
+      })
+      .catch((error) => console.error("Error:", error));
+  }
+});
+
+// Get modal elements
+const openModalButton = document.getElementById("open-upload-modal");
+const closeModalButton = document.getElementById("close-upload-modal");
+const modal = document.getElementById("upload-modal");
+
+// Show modal when the "Upload File" button is clicked
+openModalButton.addEventListener("click", () => {
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+});
+
+// Hide modal when the "Close" button is clicked
+closeModalButton.addEventListener("click", () => {
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+});
+
+// Optional: Hide modal when clicked outside of the modal content
+modal.addEventListener("click", (e) => {
+  if (e.target === modal) {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+});
