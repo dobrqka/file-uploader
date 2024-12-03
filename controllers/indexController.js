@@ -8,10 +8,16 @@ const showHome = async (req, res) => {
       include: { folders: true },
     });
 
+    const folders = await prisma.folder.findMany({
+      where: { userId: req.user.id },
+      include: {
+        files: true,
+      },
+    });
+
     return res.render("home", {
       user: updatedUser,
-      folders: updatedUser.folders,
-      files: updatedUser.folders.files,
+      folders,
     });
   } else {
     res.render("index");

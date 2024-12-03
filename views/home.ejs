@@ -150,33 +150,22 @@
               <i class="fas fa-folder mr-4"></i>
               <span class="text-lg font-medium"><%= folder.name %></span>
             </button>
+            <!-- Files associated with this folder -->
+            <ul class="pl-8 mt-2">
+              <% if (folder.files && folder.files.length > 0) { %> <%
+              folder.files.forEach(file => { %>
+              <li class="mb-2 ml-2">
+                <span class="ml-2"> |_ </span>
+                <i class="fas fa-file-text text-red-900"></i>
+                <span class="text-sm"><%= file.name %></span>
+                <!-- Display file name -->
+              </li>
+              <% }) %> <% } else { %>
+              <li class="text-sm text-gray-500">No files in this folder</li>
+              <% } %>
+            </ul>
           </li>
           <% }) } %>
-        </ul>
-
-        <!-- File Structure (upload, edit, etc.) -->
-        <ul>
-          <% if (files && files.length > 0) {files.forEach(file => { %>
-          <li class="flex justify-between items-center mb-4">
-            <span class="text-lg font-medium"><%= file.name %></span>
-
-            <!-- Actions: Edit & Delete File -->
-            <button
-              class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 ml-2"
-              id="editFileBtn"
-              data-file-id="<%= file.id %>"
-            >
-              Edit
-            </button>
-            <button
-              class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 ml-2"
-              id="deleteFileBtn"
-              data-file-id="<%= file.id %>"
-            >
-              Delete
-            </button>
-          </li>
-          <% })} %>
         </ul>
       </div>
     </div>

@@ -1,14 +1,8 @@
-Upload files
-Render files
-
-Delete Files
-Rename Files
-Create Files
-
-Show file info
+Download button (available for files)
+Info button (available for files)
+Delete, create, rename button (available for files)
 
 Move files
-
 Create subfolders
 
 Implement an external Cloud app
