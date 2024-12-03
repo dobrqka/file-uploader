@@ -12,7 +12,7 @@ const newFolderValidation = [
 ];
 
 const createFolder = async (req, res, next) => {
-  // const errors = validationResult(req);
+  const errors = validationResult(req);
 
   const folderName = req.body.folder;
   try {
@@ -27,10 +27,20 @@ const createFolder = async (req, res, next) => {
       return res.status(400).json({ message: "Folder already exists." });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { rootFolderId: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
     const folder = await prisma.folder.create({
       data: {
         name: folderName,
         userId: req.user.id,
+        parentId: user.rootFolderId,
       },
     });
     res.json({ success: true, folder: folder });
@@ -71,4 +81,9 @@ const deleteFolder = async (req, res, next) => {
   }
 };
 
-module.exports = { createFolder, renameFolder, deleteFolder };
+module.exports = {
+  createFolder,
+  renameFolder,
+  deleteFolder,
+  newFolderValidation,
+};

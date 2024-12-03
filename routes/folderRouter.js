@@ -4,9 +4,10 @@ const {
   createFolder,
   renameFolder,
   deleteFolder,
+  newFolderValidation,
 } = require("../controllers/folderController");
 
-folderRouter.post("/create", createFolder);
+folderRouter.post("/create", newFolderValidation, createFolder);
 folderRouter.post("/rename/:id", renameFolder);
 folderRouter.post("/delete/:id", deleteFolder);
 
