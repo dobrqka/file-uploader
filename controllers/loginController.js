@@ -26,11 +26,7 @@ const loginUser = (req, res, next) => {
         include: { folders: true },
       });
 
-      return res.render("home", {
-        user: updatedUser,
-        folders: updatedUser.folders,
-        files: updatedUser.folders.files,
-      });
+      res.redirect("/");
     });
   })(req, res, next);
 };

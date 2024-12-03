@@ -42,18 +42,14 @@ const createFolder = async (req, res, next) => {
       return res.status(400).json({ message: "Folder already exists." });
     }
 
-    // Check if the folder exists on the filesystem
+    // Check if the root folder exists on the filesystem
     if (!fs.existsSync(userRootFolderPath)) {
       fs.mkdirSync(userRootFolderPath, { recursive: true });
-      console.log(`Created root folder at: ${userRootFolderPath}`);
     }
 
     // Create the folder if it doesn't exist
     if (!fs.existsSync(folderPath)) {
       fs.mkdirSync(folderPath, { recursive: true });
-      console.log(`Created folder at: ${folderPath}`);
-    } else {
-      console.log(`Folder already exists at ${folderPath}`);
     }
 
     const user = await prisma.user.findUnique({
