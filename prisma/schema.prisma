@@ -18,16 +18,16 @@ model User {
   name         String   @unique
   password     String
   folders      Folder[] @relation("UserFolders")
-  rootFolder   Folder   @relation("UserRootFolder", fields: [rootFolderId], references: [id])
-  rootFolderId Int      @unique
+  rootFolder   Folder?  @relation("UserRootFolder", fields: [rootFolderId], references: [id])
+  rootFolderId Int?     @unique
 }
 
 model Folder {
   id          Int      @id @default(autoincrement())
   name        String
-  user        User     @relation("UserFolders", fields: [userId], references: [id])
-  userId      Int
-  rootUser    User?    @relation("UserRootFolder") // Added inverse relation
+  user        User?    @relation("UserFolders", fields: [userId], references: [id])
+  userId      Int?    
+  rootUser    User?    @relation("UserRootFolder") // Nullable rootUser
   parent      Folder?  @relation("ParentFolder", fields: [parentId], references: [id])
   parentId    Int?
   children    Folder[] @relation("ParentFolder")
@@ -43,3 +43,4 @@ model File {
   folder   Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
   folderId Int
 }
+

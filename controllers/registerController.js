@@ -41,10 +41,17 @@ const registerUser = async (req, res, next) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const rootFolder = await prisma.folder.create({
+      data: {
+        name: `${name}_root`,
+      },
+    });
+
     const user = await prisma.user.create({
       data: {
         name,
         password: hashedPassword,
+        rootFolderId: rootFolder.id,
       },
     });
 
