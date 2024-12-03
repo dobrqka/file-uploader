@@ -1,3 +1,4 @@
+const fs = require("fs");
 const { body, validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
 const { PrismaClient } = require("@prisma/client");
@@ -41,9 +42,12 @@ const registerUser = async (req, res, next) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const rootFolderPath = `uploads/${name}_root`;
+
     const rootFolder = await prisma.folder.create({
       data: {
         name: `${name}_root`,
+        path: rootFolderPath,
       },
     });
 
@@ -54,6 +58,11 @@ const registerUser = async (req, res, next) => {
         rootFolderId: rootFolder.id,
       },
     });
+
+    const userRootFolderPath = `./${rootFolderPath}`;
+    if (!fs.existsSync(userRootFolderPath)) {
+      fs.mkdirSync(userRootFolderPath, { recursive: true });
+    }
 
     res.redirect("/");
   } catch (error) {

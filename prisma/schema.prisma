@@ -32,6 +32,7 @@ model Folder {
   parentId    Int?
   children    Folder[] @relation("ParentFolder")
   files       File[]
+  path        String   // Path field to store the folder's filesystem path
 
   @@unique([name, parentId])
 }

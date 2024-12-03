@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const { body, validationResult } = require("express-validator");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
@@ -13,18 +15,45 @@ const newFolderValidation = [
 
 const createFolder = async (req, res, next) => {
   const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
   const folderName = req.body.folder;
+  const userId = req.user.id;
+
+  const userRootFolderPath = path.join(
+    process.cwd(),
+    "uploads",
+    `${req.user.name}_root`
+  );
+
+  const folderPath = path.join(userRootFolderPath, folderName);
+
   try {
     const existingFolder = await prisma.folder.findFirst({
       where: {
         name: folderName,
-        userId: req.user.id,
+        userId,
       },
     });
 
     if (existingFolder) {
       return res.status(400).json({ message: "Folder already exists." });
+    }
+
+    // Check if the folder exists on the filesystem
+    if (!fs.existsSync(userRootFolderPath)) {
+      fs.mkdirSync(userRootFolderPath, { recursive: true });
+      console.log(`Created root folder at: ${userRootFolderPath}`);
+    }
+
+    // Create the folder if it doesn't exist
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+      console.log(`Created folder at: ${folderPath}`);
+    } else {
+      console.log(`Folder already exists at ${folderPath}`);
     }
 
     const user = await prisma.user.findUnique({
@@ -39,8 +68,9 @@ const createFolder = async (req, res, next) => {
     const folder = await prisma.folder.create({
       data: {
         name: folderName,
-        userId: req.user.id,
-        parentId: user.rootFolderId,
+        userId,
+        parentId: req.user.rootFolderId,
+        path: folderPath,
       },
     });
     res.json({ success: true, folder: folder });
