@@ -78,6 +78,7 @@
                 <button
                   type="submit"
                   class="bg-red-900 text-white px-6 py-3 rounded hover:bg-red-700 w-full"
+                  style="background-color: #b91c1c"
                 >
                   Upload File
                 </button>
@@ -86,7 +87,8 @@
               <!-- Close Button -->
               <button
                 id="close-upload-modal"
-                class="text-gray-500 hover:text-gray-700 mt-4 w-full"
+                class="text-white px-6 py-3 rounded hover:bg-gray-700 mt-2 w-full"
+                style="background-color: #414141"
               >
                 Close
               </button>
@@ -124,6 +126,14 @@
           >
             <i class="fas fa-trash-alt"></i>
           </button>
+          <!-- Download -->
+          <button
+            class="toolbar-button text-red-900 hover:text-red-700"
+            id="download-btn"
+            title="Download"
+          >
+            <i class="fas fa-download"></i>
+          </button>
           <!-- Edit File -->
           <!-- <button
             class="text-red-900 hover:text-red-700"
@@ -155,9 +165,16 @@
               <% if (folder.files && folder.files.length > 0) { %> <%
               folder.files.forEach(file => { %>
               <li class="mb-2 ml-2">
-                <span class="ml-2"> |_ </span>
-                <i class="fas fa-file-text text-red-900"></i>
-                <span class="text-sm"><%= file.name %></span>
+                <button
+                  id="file-<%= file.id %>"
+                  class="file-button"
+                  aria-label="Select file"
+                  onclick="selectFile(<%= file.id %>)"
+                >
+                  <span class="ml-2"> |_ </span>
+                  <i class="fas fa-file-text text-red-900"></i>
+                  <span class="text-sm"><%= file.name %></span>
+                </button>
                 <!-- Display file name -->
               </li>
               <% }) %> <% } else { %>

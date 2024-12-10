@@ -39,4 +39,24 @@ const uploadFile = (req, res) => {
   });
 };
 
-module.exports = { uploadFile };
+const downloadFile = async (req, res, next) => {
+  const fileId = req.params.fileId;
+  try {
+    // Fetch file details from your database
+    const file = await prisma.file.findUnique({
+      where: { id: parseInt(fileId) },
+    });
+
+    if (!file) {
+      return res.status(404).send("File not found");
+    }
+
+    // Send the file as a download response
+    const filePath = path.join(__dirname, file.path);
+    res.download(filePath, file.name); // This triggers the file download
+  } catch (error) {
+    res.status(500).send("Error downloading the file");
+  }
+};
+
+module.exports = { uploadFile, downloadFile };

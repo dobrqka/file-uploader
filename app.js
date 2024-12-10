@@ -36,7 +36,7 @@ app.use("/logout", logoutRouter);
 app.use("/file", fileRouter);
 app.use("/folder", folderRouter);
 
-const PORT = 8015;
+const PORT = 8020;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

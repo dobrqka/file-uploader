@@ -88,6 +88,55 @@ const selectFolder = (folderId) => {
   toggleToolbarButtons();
 };
 
+let selectedFileId = null;
+
+const selectFile = (fileId) => {
+  // Toggle the selected file
+  const fileButton = document.getElementById(`file-${fileId}`);
+
+  // If the file is already selected, deselect it
+  if (selectedFileId === fileId) {
+    fileButton.classList.remove("bg-gray-200");
+    selectedFileId = null;
+  } else {
+    // Deselect any previously selected file
+    if (selectedFileId !== null) {
+      const previousButton = document.getElementById(`file-${selectedFileId}`);
+      previousButton.classList.remove("bg-gray-200");
+    }
+
+    // Select the new folder
+    fileButton.classList.add("bg-gray-200");
+    selectedFileId = fileId;
+  }
+};
+
+document.getElementById("download-btn").addEventListener("click", () => {
+  if (selectedFileId !== null) {
+    // Send the request to download the selected file
+    fetch(`/file/download/${selectedFileId}`, {
+      method: "GET",
+    })
+      .then((response) => {
+        if (response.ok) {
+          // Create an invisible link element to trigger the download
+          const downloadLink = document.createElement("a");
+          downloadLink.href = response.url; // Use the file URL from the response
+          downloadLink.download = true; // This forces the download
+          downloadLink.click(); // Programmatically click the link
+        } else {
+          alert("Failed to download the file.");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred while downloading the file.");
+      });
+  } else {
+    alert("No file selected.");
+  }
+});
+
 document.getElementById("delete-btn").addEventListener("click", () => {
   if (selectedFolderId) {
     fetch(`/folder/delete/${selectedFolderId}`, {
