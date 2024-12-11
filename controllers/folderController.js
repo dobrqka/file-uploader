@@ -39,7 +39,7 @@ const createFolder = async (req, res, next) => {
 
     // Create a placeholder to initialize the folder in Cloudinary
     await cloudinary.uploader.upload(
-      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP",
+      "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAACAkQBADs=",
       {
         public_id: `${folderName}/placeholder`,
       }
@@ -53,7 +53,7 @@ const createFolder = async (req, res, next) => {
       },
     });
 
-    res.json({ success: true, folder });
+    res.redirect("/");
   } catch (error) {
     next(error);
   }
@@ -101,7 +101,7 @@ const renameFolder = async (req, res, next) => {
       data: { name: newName },
     });
 
-    res.json({ success: true, folder: updatedFolder });
+    res.redirect("/");
   } catch (error) {
     next(error);
   }
@@ -135,10 +135,13 @@ const deleteFolder = async (req, res, next) => {
 
     // Remove the folder from the database
     await prisma.folder.delete({
-      where: { id: folderId },
+      where: {
+        id: folderId,
+        userId: req.user.id,
+      },
     });
 
-    res.json({ success: true });
+    res.redirect("/");
   } catch (error) {
     next(error);
   }
