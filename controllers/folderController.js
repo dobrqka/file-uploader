@@ -45,11 +45,14 @@ const createFolder = async (req, res, next) => {
       }
     );
 
+    const folderPath = `${req.user.name}_root/${folderName}`;
+
     // Save folder reference in the database
     const folder = await prisma.folder.create({
       data: {
         name: folderName,
         userId: req.user.id,
+        path: folderPath,
       },
     });
 
@@ -127,22 +130,45 @@ const deleteFolder = async (req, res, next) => {
 
     const folderName = folder.name;
 
-    // Delete all resources in the folder
-    await cloudinary.api.delete_resources_by_prefix(folderName);
-
-    // Delete the folder itself
-    await cloudinary.api.delete_folder(folderName);
-
-    // Remove the folder from the database
-    await prisma.folder.delete({
-      where: {
-        id: folderId,
-        userId: req.user.id,
-      },
+    // Check if there are any resources in the folder first
+    const resources = await cloudinary.api.resources({
+      type: "upload",
+      prefix: folderName,
     });
 
+    if (resources.resources.length > 0) {
+      console.log("Folder is not empty. Deleting files...");
+      await cloudinary.api.delete_resources_by_prefix(folderName);
+    } else {
+      console.log("Folder is empty, no files to delete.");
+    }
+
+    // Check if folder is empty after resources are deleted
+    const checkEmptyFolder = await cloudinary.api.resources({
+      type: "upload",
+      prefix: folderName,
+      max_results: 1, // check if there's at least one resource left
+    });
+
+    if (checkEmptyFolder.resources.length === 0) {
+      // If the folder is empty, skip deleting it explicitly
+      console.log(`Folder ${folderName} is empty. Skipping folder deletion.`);
+    } else {
+      // Delete the folder explicitly from Cloudinary if it's not empty
+      await cloudinary.api.delete_folder(folderName);
+      console.log(`Folder ${folderName} deleted from Cloudinary.`);
+    }
+
+    // Now delete the folder from the database
+    const deletedFolder = await prisma.folder.delete({
+      where: { id: folderId },
+    });
+
+    // Log database deletion success
+    console.log("Deleted folder from database:", deletedFolder);
     res.redirect("/");
   } catch (error) {
+    console.error("Error deleting folder:", error);
     next(error);
   }
 };
