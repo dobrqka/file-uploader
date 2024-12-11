@@ -3,6 +3,13 @@ const { body, validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const cloudinary = require("cloudinary").v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const showRegister = (req, res) => {
   res.render("register");
@@ -42,12 +49,20 @@ const registerUser = async (req, res, next) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const rootFolderPath = `uploads/${name}_root`;
+    // Create a placeholder file in Cloudinary to initialize the root folder
+    const rootFolderName = `${name}_root`;
+
+    await cloudinary.uploader.upload(
+      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP",
+      {
+        public_id: `${rootFolderName}/placeholder`,
+      }
+    );
 
     const rootFolder = await prisma.folder.create({
       data: {
-        name: `${name}_root`,
-        path: rootFolderPath,
+        name: rootFolderName,
+        path: rootFolderName,
       },
     });
 
@@ -58,11 +73,6 @@ const registerUser = async (req, res, next) => {
         rootFolderId: rootFolder.id,
       },
     });
-
-    const userRootFolderPath = `./${rootFolderPath}`;
-    if (!fs.existsSync(userRootFolderPath)) {
-      fs.mkdirSync(userRootFolderPath, { recursive: true });
-    }
 
     res.redirect("/");
   } catch (error) {
