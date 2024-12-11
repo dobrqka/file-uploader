@@ -1,9 +1,9 @@
-const fs = require("fs");
 const { body, validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const cloudinary = require("cloudinary").v2;
+require("dotenv").config();
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -53,7 +53,7 @@ const registerUser = async (req, res, next) => {
     const rootFolderName = `${name}_root`;
 
     await cloudinary.uploader.upload(
-      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP",
+      "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAACAkQBADs=",
       {
         public_id: `${rootFolderName}/placeholder`,
       }
