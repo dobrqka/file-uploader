@@ -41,11 +41,18 @@ const createFolder = async (req, res, next) => {
     await cloudinary.uploader.upload(
       "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAACAkQBADs=",
       {
-        public_id: `${folderName}/placeholder`,
+        public_id: `${req.user.name}_root/${folderName}/placeholder`,
       }
     );
 
     const folderPath = `${req.user.name}_root/${folderName}`;
+    const parentId = await prisma.folder.findFirst({
+      where: {
+        userId: req.user.id,
+        parentId: { equals: null },
+      },
+      select: { id: true },
+    });
 
     // Save folder reference in the database
     const folder = await prisma.folder.create({
@@ -53,6 +60,7 @@ const createFolder = async (req, res, next) => {
         name: folderName,
         userId: req.user.id,
         path: folderPath,
+        parentId: parentId.id,
       },
     });
 
@@ -81,27 +89,37 @@ const renameFolder = async (req, res, next) => {
         .json({ message: "Folder not found or access denied." });
     }
 
-    const oldName = folder.name;
+    const userRootPrefix = `${req.user.name}_root`;
+    const oldFolderPath = `${userRootPrefix}/${folder.name}`;
+    const newFolderPath = `${userRootPrefix}/${newName}`;
 
     // List all resources in the old folder
     const resources = await cloudinary.api.resources({
       type: "upload",
-      prefix: oldName,
+      prefix: oldFolderPath,
     });
 
     // Move each resource to the new folder
     for (const resource of resources.resources) {
-      const newPublicId = resource.public_id.replace(oldName, newName);
+      const newPublicId = resource.public_id.replace(
+        oldFolderPath,
+        newFolderPath
+      );
       await cloudinary.uploader.rename(resource.public_id, newPublicId);
     }
 
-    // Delete the placeholder in the old folder
-    await cloudinary.api.delete_resources_by_prefix(`${oldName}/placeholder`);
+    try {
+      await cloudinary.api.delete_resources_by_prefix(
+        `${oldFolderPath}/placeholder`
+      );
+    } catch (error) {
+      console.warn("No placeholder to delete:", error.message);
+    }
 
     // Update folder name in the database
     const updatedFolder = await prisma.folder.update({
       where: { id: folderId },
-      data: { name: newName, path: `${req.user.name}_root/${newName}` },
+      data: { name: newName, path: newFolderPath },
     });
 
     res.redirect("/");

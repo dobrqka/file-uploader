@@ -9,7 +9,7 @@ const showHome = async (req, res) => {
     });
 
     const folders = await prisma.folder.findMany({
-      where: { userId: req.user.id },
+      where: { userId: req.user.id, parentId: { not: null } },
       include: {
         files: true,
       },

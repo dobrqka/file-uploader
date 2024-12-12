@@ -74,6 +74,15 @@ const registerUser = async (req, res, next) => {
       },
     });
 
+    const updatedFolder = await prisma.folder.update({
+      where: {
+        id: rootFolder.id,
+      },
+      data: {
+        userId: user.id,
+      },
+    });
+
     res.redirect("/");
   } catch (error) {
     next(error);

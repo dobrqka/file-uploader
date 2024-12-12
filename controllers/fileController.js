@@ -21,9 +21,18 @@ const uploadFile = (req, res) => {
         return res.status(400).json({ message: "Invalid folder ID" });
       }
 
+      // Get folder details from the database
+      const folder = await prisma.folder.findUnique({
+        where: { id: folderId },
+      });
+
+      if (!folder) {
+        return res.status(404).json({ message: "Folder not found" });
+      }
+
       const file = await prisma.file.create({
         data: {
-          name: req.file.filename,
+          name: req.file.originalname,
           path: req.file.path,
           folderId: folderId,
         },
