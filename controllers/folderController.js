@@ -101,7 +101,7 @@ const renameFolder = async (req, res, next) => {
     // Update folder name in the database
     const updatedFolder = await prisma.folder.update({
       where: { id: folderId },
-      data: { name: newName },
+      data: { name: newName, path: `${req.user.name}_root/${newName}` },
     });
 
     res.redirect("/");
