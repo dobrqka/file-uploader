@@ -41,7 +41,9 @@ const createFolder = async (req, res, next) => {
     await cloudinary.uploader.upload(
       "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAACAkQBADs=",
       {
-        public_id: `${req.user.name}_root/${folderName}/placeholder`,
+        folder: `${req.user.name}_root/${folderName}`,
+        public_id: "placeholder",
+        resource_type: "raw",
       }
     );
 
@@ -146,17 +148,23 @@ const deleteFolder = async (req, res, next) => {
         .json({ message: "Folder not found or access denied." });
     }
 
-    const folderName = folder.name;
+    const folderPath = `${req.user.name}_root/${folder.name}`;
 
     // Check if there are any resources in the folder first
     const resources = await cloudinary.api.resources({
       type: "upload",
-      prefix: folderName,
+      prefix: folderPath,
     });
+
+    console.log(
+      `Checking resources for ${folderPath}:`,
+      resources.resources.length
+    );
 
     if (resources.resources.length > 0) {
       console.log("Folder is not empty. Deleting files...");
-      await cloudinary.api.delete_resources_by_prefix(folderName);
+      await cloudinary.api.delete_resources([`${folderPath}/placeholder`]);
+      await cloudinary.api.delete_resources_by_prefix(folderPath);
     } else {
       console.log("Folder is empty, no files to delete.");
     }
@@ -164,17 +172,21 @@ const deleteFolder = async (req, res, next) => {
     // Check if folder is empty after resources are deleted
     const checkEmptyFolder = await cloudinary.api.resources({
       type: "upload",
-      prefix: folderName,
+      prefix: folderPath,
       max_results: 1, // check if there's at least one resource left
     });
 
     if (checkEmptyFolder.resources.length === 0) {
       // If the folder is empty, skip deleting it explicitly
-      console.log(`Folder ${folderName} is empty. Skipping folder deletion.`);
+      console.log(
+        `Folder ${folderPath} is empty. Proceeding to delete the folder.`
+      );
+      await cloudinary.api.delete_folder(folderPath);
     } else {
       // Delete the folder explicitly from Cloudinary if it's not empty
-      await cloudinary.api.delete_folder(folderName);
-      console.log(`Folder ${folderName} deleted from Cloudinary.`);
+      console.log(
+        `Folder ${folderPath} still has resources. Skipping folder deletion.`
+      );
     }
 
     // Now delete the folder from the database

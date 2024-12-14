@@ -15,10 +15,9 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => {
-    const userId = req.user.id;
     const folderId = parseInt(req.body.folderId, 10);
 
-    const folder = prisma.folder.findUnique({
+    const folder = await prisma.folder.findUnique({
       where: { id: folderId },
       select: { name: true },
     });
@@ -28,7 +27,7 @@ const storage = new CloudinaryStorage({
     }
 
     return {
-      folder: folder.name,
+      folder: `${req.user.name}_root/${folder.name}`,
       resource_type: "raw",
       public_id: `${file.originalname}_${Date.now()}`,
     };

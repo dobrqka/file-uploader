@@ -55,7 +55,9 @@ const registerUser = async (req, res, next) => {
     await cloudinary.uploader.upload(
       "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAACAkQBADs=",
       {
-        public_id: `${rootFolderName}/placeholder`,
+        folder: rootFolderName,
+        public_id: "placeholder",
+        resource_type: "raw",
       }
     );
 
