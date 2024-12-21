@@ -149,47 +149,21 @@ const deleteFolder = async (req, res, next) => {
     }
 
     const folderPath = `${req.user.name}_root/${folder.name}`;
+    console.log(`Deleting resources with prefix: ${folderPath}`);
 
-    // Check if there are any resources in the folder first
-    const resources = await cloudinary.api.resources({
-      type: "upload",
-      prefix: folderPath,
+    await cloudinary.api.delete_resources_by_prefix(`${folderPath}`, {
+      resource_type: "raw",
+    });
+    await cloudinary.api.delete_resources_by_prefix(`${folderPath}`, {
+      resource_type: "image",
+    });
+    await cloudinary.api.delete_resources_by_prefix(`${folderPath}`, {
+      resource_type: "video",
     });
 
-    console.log(
-      `Checking resources for ${folderPath}:`,
-      resources.resources.length
-    );
+    await cloudinary.api.delete_folder(`${folderPath}`);
 
-    if (resources.resources.length > 0) {
-      console.log("Folder is not empty. Deleting files...");
-      await cloudinary.api.delete_resources([`${folderPath}/placeholder`]);
-      await cloudinary.api.delete_resources_by_prefix(folderPath);
-    } else {
-      console.log("Folder is empty, no files to delete.");
-    }
-
-    // Check if folder is empty after resources are deleted
-    const checkEmptyFolder = await cloudinary.api.resources({
-      type: "upload",
-      prefix: folderPath,
-      max_results: 1, // check if there's at least one resource left
-    });
-
-    if (checkEmptyFolder.resources.length === 0) {
-      // If the folder is empty, skip deleting it explicitly
-      console.log(
-        `Folder ${folderPath} is empty. Proceeding to delete the folder.`
-      );
-      await cloudinary.api.delete_folder(folderPath);
-    } else {
-      // Delete the folder explicitly from Cloudinary if it's not empty
-      console.log(
-        `Folder ${folderPath} still has resources. Skipping folder deletion.`
-      );
-    }
-
-    // Now delete the folder from the database
+    // Delete the folder from the database
     const deletedFolder = await prisma.folder.delete({
       where: { id: folderId },
     });
