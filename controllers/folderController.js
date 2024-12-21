@@ -95,7 +95,7 @@ const renameFolder = async (req, res, next) => {
     const oldFolderPath = `${userRootPrefix}/${folder.name}`;
     const newFolderPath = `${userRootPrefix}/${newName}`;
 
-    // List all resources in the old folder
+    // List all resources (assets) in the old folder
     const resources = await cloudinary.api.resources({
       type: "upload",
       prefix: oldFolderPath,
@@ -110,22 +110,53 @@ const renameFolder = async (req, res, next) => {
       await cloudinary.uploader.rename(resource.public_id, newPublicId);
     }
 
+    // Ensure new folder is created by uploading a placeholder file to it (this step is to explicitly create the folder)
     try {
-      await cloudinary.api.delete_resources_by_prefix(
-        `${oldFolderPath}/placeholder`
+      await cloudinary.uploader.upload(
+        "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAACAkQBADs=", // Upload a dummy image as a placeholder to create the folder
+        {
+          folder: `${newFolderPath}`,
+          public_id: `${newFolderPath}/placeholder`,
+          resource_type: "image",
+        }
       );
+      console.log("New folder created with placeholder");
     } catch (error) {
-      console.warn("No placeholder to delete:", error.message);
+      console.warn(
+        "Error creating new folder with placeholder:",
+        error.message
+      );
     }
 
-    // Update folder name in the database
+    // Delete the old folder (this effectively deletes the folder by removing all assets)
+    try {
+      await cloudinary.api.delete_resources_by_prefix(`${oldFolderPath}`, {
+        resource_type: "raw",
+      });
+      await cloudinary.api.delete_resources_by_prefix(`${oldFolderPath}`, {
+        resource_type: "image",
+      });
+      await cloudinary.api.delete_resources_by_prefix(`${oldFolderPath}`, {
+        resource_type: "video",
+      });
+      await cloudinary.api.delete_folder(`${oldFolderPath}`);
+      console.log(`Old folder deleted from Cloudinary: ${oldFolderPath}`);
+    } catch (error) {
+      console.warn("Error deleting old folder from Cloudinary:", error.message);
+    }
+
+    // Update the folder name in the database
     const updatedFolder = await prisma.folder.update({
       where: { id: folderId },
       data: { name: newName, path: newFolderPath },
     });
 
+    console.log("Folder renamed in database:", updatedFolder);
+
+    // Redirect or respond with success
     res.redirect("/");
   } catch (error) {
+    console.error("Error renaming folder:", error);
     next(error);
   }
 };
