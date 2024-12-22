@@ -1,6 +1,7 @@
 const upload = require("../middleware/multerConfig");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const cloudinary = require("cloudinary").v2;
 
 const uploadFile = (req, res) => {
   upload.single("file")(req, res, async (err) => {
@@ -30,9 +31,11 @@ const uploadFile = (req, res) => {
         return res.status(404).json({ message: "Folder not found" });
       }
 
+      const fileName = req.file.filename.split("/").pop();
+
       const file = await prisma.file.create({
         data: {
-          name: req.file.originalname,
+          name: fileName,
           path: req.file.path,
           folderId: folderId,
         },
@@ -48,23 +51,86 @@ const uploadFile = (req, res) => {
   });
 };
 
-const downloadFile = async (req, res, next) => {
-  const fileId = req.params.fileId;
-  try {
-    // Fetch file details from your database
-    const file = await prisma.file.findUnique({
-      where: { id: parseInt(fileId) },
-    });
+const getPublicIdFromDatabase = async (fileId, prisma) => {
+  // Fetch the file and its folder details
+  const file = await prisma.file.findUnique({
+    where: { id: fileId },
+    include: { folder: true },
+  });
 
-    if (!file) {
-      return res.status(404).send("File not found");
+  if (!file) {
+    throw new Error("File not found.");
+  }
+
+  let folderPath = "";
+  let currentFolder = file.folder;
+
+  // Traverse the folder hierarchy
+  while (currentFolder) {
+    folderPath = `${currentFolder.name}/${folderPath}`;
+    if (!currentFolder.parentId) break;
+    currentFolder = await prisma.folder.findUnique({
+      where: { id: currentFolder.parentId },
+    });
+  }
+
+  // Construct the publicId
+  const publicId = `${folderPath}${file.name}`;
+  return { publicId, file };
+};
+
+const downloadFile = async (req, res, next) => {
+  const fileId = parseInt(req.params.fileId);
+
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({ message: "Unauthorized." });
+  }
+
+  try {
+    const { publicId, file } = await getPublicIdFromDatabase(fileId, prisma);
+
+    // Define the resource types to check
+    const resourceTypes = ["image", "video", "raw"];
+    let resource = null;
+
+    // Try fetching the resource from Cloudinary
+    for (const type of resourceTypes) {
+      try {
+        resource = await cloudinary.api.resource(publicId, {
+          resource_type: type,
+        });
+        if (resource) {
+          console.log(`Found resource with type: ${type}`);
+          break; // Stop checking once we find the resource
+        }
+      } catch (error) {
+        // Continue to the next type if resource not found
+        if (error.http_code !== 404) {
+          console.error(`Error fetching resource of type ${type}:`, error);
+        }
+      }
     }
 
-    // Send the file as a download response
-    const filePath = path.join(__dirname, file.path);
-    res.download(filePath, file.name); // This triggers the file download
+    if (!resource || !resource.secure_url) {
+      return res.status(404).json({ message: "File not found in Cloudinary." });
+    }
+
+    const fileUrl = resource.secure_url;
+    console.log(fileUrl);
+    // Send the file for download by setting appropriate headers
+    res.setHeader("Content-Disposition", `attachment; filename="${file.name}"`);
+    res.setHeader(
+      "Content-Type",
+      resource.format
+        ? `application/${resource.format}`
+        : "application/octet-stream"
+    );
+    console.log("Set headers");
+    // Stream the file from Cloudinary
+    res.redirect(fileUrl);
   } catch (error) {
-    res.status(500).send("Error downloading the file");
+    console.error("Error downloading file:", error);
+    next(error);
   }
 };
 
