@@ -41,6 +41,8 @@ model File {
   id       Int      @id @default(autoincrement())
   name     String
   path     String
+  size      Int      // Size of the file in bytes
+  createdAt DateTime @default(now()) // Automatically sets the upload time
   folder   Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
   folderId Int
 }

@@ -111,6 +111,34 @@ const selectFile = (fileId) => {
   }
 };
 
+const showInfo = (fileId, fileSize, uploadTime) => {
+  const tooltip = document.getElementById(`file-info-${fileId}`);
+
+  tooltip.innerHTML = `
+    <p>Size: ${fileSize} bytes</p>
+    <p>Uploaded: ${uploadTime}</p>
+  `;
+
+  tooltip.style.display = "inline-block";
+
+  // Hide tooltip when mouse leaves
+  tooltip.addEventListener("mouseleave", () => {
+    tooltip.style.display = "none";
+  });
+};
+
+const hideInfo = (fileId) => {
+  const tooltip = document.getElementById(`file-info-${fileId}`);
+  tooltip.style.display = "none";
+};
+
+// document.querySelectorAll("button").forEach((button) => {
+//   button.addEventListener("mouseleave", () => {
+//     const tooltip = button.nextElementSibling; // Assumes the tooltip is the next sibling of the button
+//     tooltip.style.display = "none";
+//   });
+// });
+
 document.getElementById("download-btn").addEventListener("click", () => {
   if (selectedFileId !== null) {
     // Send the request to download the selected file

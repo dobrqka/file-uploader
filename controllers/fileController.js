@@ -38,6 +38,7 @@ const uploadFile = (req, res) => {
           name: fileName,
           path: req.file.path,
           folderId: folderId,
+          size: req.file.size, // Store file size
         },
       });
 
