@@ -135,4 +135,58 @@ const downloadFile = async (req, res, next) => {
   }
 };
 
-module.exports = { uploadFile, downloadFile };
+const deleteFile = async (req, res, next) => {
+  console.log("Attempting to delete.");
+  const fileId = parseInt(req.params.id);
+
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({ message: "Unauthorized." });
+  }
+
+  try {
+    const file = await prisma.file.findFirst({
+      where: {
+        id: fileId,
+        folder: {
+          userId: req.user.id,
+        },
+      },
+    });
+
+    if (!file) {
+      return res
+        .status(404)
+        .json({ message: "File not found or access denied." });
+    }
+
+    const { publicId } = await getPublicIdFromDatabase(fileId, prisma);
+
+    const resourceTypes = ["image", "raw", "video"];
+    let resource = null;
+
+    // Try fetching the resource from Cloudinary
+    for (const type of resourceTypes) {
+      try {
+        await cloudinary.uploader.destroy(publicId, { resource_type: type });
+      } catch (error) {
+        // Continue to the next type if resource not found
+        if (error.http_code !== 404) {
+          console.error(`Error fetching resource of type ${type}:`, error);
+        }
+      }
+    }
+    console.log("Deleted from Cloudinary");
+    // Delete the file from the database
+    const deletedFile = await prisma.file.delete({
+      where: { id: fileId },
+    });
+    console.log("Deleted from db");
+    // Log database deletion success
+    res.redirect("/");
+  } catch (error) {
+    console.error("Error deleting file:", error);
+    next(error);
+  }
+};
+
+module.exports = { uploadFile, downloadFile, deleteFile };

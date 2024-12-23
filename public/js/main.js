@@ -132,13 +132,6 @@ const hideInfo = (fileId) => {
   tooltip.style.display = "none";
 };
 
-// document.querySelectorAll("button").forEach((button) => {
-//   button.addEventListener("mouseleave", () => {
-//     const tooltip = button.nextElementSibling; // Assumes the tooltip is the next sibling of the button
-//     tooltip.style.display = "none";
-//   });
-// });
-
 document.getElementById("download-btn").addEventListener("click", () => {
   if (selectedFileId !== null) {
     // Send the request to download the selected file
@@ -186,6 +179,27 @@ document.getElementById("delete-btn").addEventListener("click", () => {
           toggleToolbarButtons();
         } else {
           alert("Failed to delete folder.");
+        }
+      })
+      .catch((error) => console.error("Error:", error));
+  } else if (selectedFileId) {
+    fetch(`/file/delete/${selectedFileId}`, {
+      method: "POST",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          alert("File deleted successfully!");
+          const fileElement = document.getElementById(`file-${selectedFileId}`);
+          if (fileElement) {
+            fileElement.remove();
+          }
+
+          // Reset the selected folder
+          selectedFileId = null;
+          toggleToolbarButtons();
+        } else {
+          alert("Failed to delete file.");
         }
       })
       .catch((error) => console.error("Error:", error));
