@@ -101,7 +101,6 @@ const downloadFile = async (req, res, next) => {
           resource_type: type,
         });
         if (resource) {
-          console.log(`Found resource with type: ${type}`);
           break; // Stop checking once we find the resource
         }
       } catch (error) {
@@ -117,7 +116,6 @@ const downloadFile = async (req, res, next) => {
     }
 
     const fileUrl = resource.secure_url;
-    console.log(fileUrl);
     // Send the file for download by setting appropriate headers
     res.setHeader("Content-Disposition", `attachment; filename="${file.name}"`);
     res.setHeader(
@@ -126,7 +124,6 @@ const downloadFile = async (req, res, next) => {
         ? `application/${resource.format}`
         : "application/octet-stream"
     );
-    console.log("Set headers");
     // Stream the file from Cloudinary
     res.redirect(fileUrl);
   } catch (error) {
@@ -136,7 +133,6 @@ const downloadFile = async (req, res, next) => {
 };
 
 const deleteFile = async (req, res, next) => {
-  console.log("Attempting to delete.");
   const fileId = parseInt(req.params.id);
 
   if (!req.user || !req.user.id) {
@@ -175,12 +171,10 @@ const deleteFile = async (req, res, next) => {
         }
       }
     }
-    console.log("Deleted from Cloudinary");
     // Delete the file from the database
     const deletedFile = await prisma.file.delete({
       where: { id: fileId },
     });
-    console.log("Deleted from db");
     // Log database deletion success
     res.redirect("/");
   } catch (error) {
@@ -190,7 +184,6 @@ const deleteFile = async (req, res, next) => {
 };
 
 const renameFile = async (req, res, next) => {
-  console.log("renaming file");
   const fileId = parseInt(req.params.id);
   const newName = req.body.newName;
 
@@ -222,30 +215,39 @@ const renameFile = async (req, res, next) => {
     const pidSegments = publicId.split("/");
     pidSegments[pidSegments.length - 1] = newName;
     const newPublicId = pidSegments.join("/");
-    console.log(`new pid: ${newPublicId}`);
-    console.log(`old pid: ${publicId}`);
 
-    // change public ID in Cloudinary
-    await cloudinary.uploader.rename(publicId, newPublicId, {
-      resource_type: "raw",
-    });
-    // change display name
-    await cloudinary.api.update(newPublicId, {
-      resource_type: "raw",
-      display_name: newName,
-    });
+    const resourceTypes = ["image", "raw", "video"];
+    let resource = null;
+
+    // Try fetching the resource from Cloudinary
+    for (const type of resourceTypes) {
+      try {
+        // change public ID in Cloudinary
+        await cloudinary.uploader.rename(publicId, newPublicId, {
+          resource_type: type,
+        });
+        // change display name
+        await cloudinary.api.update(newPublicId, {
+          resource_type: type,
+          display_name: newName,
+        });
+      } catch (error) {
+        // Continue to the next type if resource not found
+        if (error.http_code !== 404) {
+          console.error(`Error fetching resource of type ${type}:`, error);
+        }
+      }
+    }
 
     const pathSegments = file.path.split("/");
     pathSegments[pathSegments.length - 1] = newName;
     const newFilePath = pathSegments.join("/");
-    console.log(`new file path: ${newFilePath}`);
 
     // Update the file name in the database
     const updatedFile = await prisma.file.update({
       where: { id: fileId },
       data: { name: newName, path: newFilePath },
     });
-    console.log("file updated in db");
     // Redirect or respond with success
     res.redirect("/");
   } catch (error) {
