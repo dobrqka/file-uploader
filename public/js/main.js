@@ -232,6 +232,31 @@ document.getElementById("rename-btn").addEventListener("click", () => {
         }
       })
       .catch((error) => console.error("Error:", error));
+  } else if (selectedFileId) {
+    const newName = prompt("Please insert the new name of your file.");
+
+    fetch(`/file/rename/${selectedFileId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ newName }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          alert("File renamed successfully!");
+          const fileElement = document.querySelector(
+            `#file-${selectedFileId}>span`
+          );
+          fileElement.textContent = newName;
+          selectedFileId = null;
+          toggleToolbarButtons();
+        } else {
+          alert("Failed to delete file.");
+        }
+      })
+      .catch((error) => console.error("Error:", error));
   }
 });
 

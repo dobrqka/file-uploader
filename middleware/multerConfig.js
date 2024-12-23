@@ -29,7 +29,7 @@ const storage = new CloudinaryStorage({
     return {
       folder: `${req.user.name}_root/${folder.name}`,
       resource_type: "raw",
-      public_id: `${file.originalname}_${Date.now()}`,
+      public_id: `${Date.now()}${file.originalname}`,
     };
   },
 });

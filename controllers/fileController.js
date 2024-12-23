@@ -189,4 +189,69 @@ const deleteFile = async (req, res, next) => {
   }
 };
 
-module.exports = { uploadFile, downloadFile, deleteFile };
+const renameFile = async (req, res, next) => {
+  console.log("renaming file");
+  const fileId = parseInt(req.params.id);
+  const newName = req.body.newName;
+
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({ message: "Unauthorized." });
+  }
+
+  try {
+    const file = await prisma.file.findFirst({
+      where: {
+        id: fileId,
+        folder: {
+          userId: req.user.id,
+        },
+      },
+      include: {
+        folder: true,
+      },
+    });
+
+    if (!file) {
+      return res
+        .status(404)
+        .json({ message: "File not found or access denied." });
+    }
+
+    const { publicId } = await getPublicIdFromDatabase(fileId, prisma);
+    // make the new one
+    const pidSegments = publicId.split("/");
+    pidSegments[pidSegments.length - 1] = newName;
+    const newPublicId = pidSegments.join("/");
+    console.log(`new pid: ${newPublicId}`);
+    console.log(`old pid: ${publicId}`);
+
+    // change public ID in Cloudinary
+    await cloudinary.uploader.rename(publicId, newPublicId, {
+      resource_type: "raw",
+    });
+    // change display name
+    await cloudinary.api.update(newPublicId, {
+      resource_type: "raw",
+      display_name: newName,
+    });
+
+    const pathSegments = file.path.split("/");
+    pathSegments[pathSegments.length - 1] = newName;
+    const newFilePath = pathSegments.join("/");
+    console.log(`new file path: ${newFilePath}`);
+
+    // Update the file name in the database
+    const updatedFile = await prisma.file.update({
+      where: { id: fileId },
+      data: { name: newName, path: newFilePath },
+    });
+    console.log("file updated in db");
+    // Redirect or respond with success
+    res.redirect("/");
+  } catch (error) {
+    console.error("Error renaming file:", error);
+    next(error);
+  }
+};
+
+module.exports = { uploadFile, downloadFile, renameFile, deleteFile };
