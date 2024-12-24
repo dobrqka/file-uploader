@@ -23,28 +23,42 @@ A simple file upload app built with **Express.js** and **Cloudinary** for cloud 
 
 1.  Clone the repository:
 
-    $git clone https://github.com/dobrqka/file-uploader.git
+    ```bash
+    git clone https://github.com/dobrqka/file-uploader.git
+
+    ```
 
 2.  Install dependencies:
 
-    $cd file-uploader
-   $npm install
+    ```bash
+    cd file-uploader
+    npm install
+    ```
 
 3.  Rename .env-template to .env and fill in your Cloudinary credentials:
 
-    DATABASE_URL="your-postgresql-db-url
-    SECRET="your-random-safe-secret-string" // for passport.js authentication
+    ```bash
+    DATABASE_URL="your-postgresql-db-url"
+    SECRET="your-random-safe-secret-string" # for passport.js authentication
     CLOUDINARY_CLOUD_NAME="your-cloud-name"
     CLOUDINARY_API_KEY="your-api-key"
     CLOUDINARY_API_SECRET="your-api-secret"
 
+    ```
+
 4.  Configure Prisma Client
 
-    $npx prisma generate
-    $npx prisma migrate dev
+    ```bash
+    npx prisma generate
+    npx prisma migrate dev
+
+    ```
 
 5.  Run the app
 
-    $npm start
+    ```bash
+    npm start
+
+    ```
 
 6.  Open your browser and visit http://localhost:8000.
