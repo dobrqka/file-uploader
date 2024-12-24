@@ -12,6 +12,19 @@
   <body class="bg-gray-100 text-gray-800 font-sans">
     <!-- Main content -->
     <div class="container mx-auto px-4 py-8">
+      <div
+        id="loading-modal"
+        class="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center hidden z-50"
+      >
+        <div
+          class="bg-white p-6 rounded-lg shadow-lg flex items-center justify-center"
+        >
+          <div
+            class="loader border-t-4 border-blue-500 rounded-full w-12 h-12 animate-spin"
+          ></div>
+          <span class="ml-4 text-lg font-semibold">Processing...</span>
+        </div>
+      </div>
       <div class="flex justify-between items-center mb-4">
         <h1 class="text-3xl text-red-900 font-bold mb-4">
           Welcome to your personal storage, <%= user.name %>!
@@ -94,14 +107,6 @@
               </button>
             </div>
           </div>
-          <!-- New File -->
-          <button
-            class="text-red-900 hover:text-red-700"
-            id="new-file-btn"
-            title="New File"
-          >
-            <i class="fas fa-file-text"></i>
-          </button>
           <!-- New Folder -->
           <button
             class="text-red-900 hover:text-red-700"

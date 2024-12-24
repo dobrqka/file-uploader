@@ -65,8 +65,7 @@ const createFolder = async (req, res, next) => {
         parentId: parentId.id,
       },
     });
-
-    res.redirect("/");
+    res.json({ success: true, message: "Folder deleted successfully!" });
   } catch (error) {
     next(error);
   }
@@ -154,7 +153,7 @@ const renameFolder = async (req, res, next) => {
     console.log("Folder renamed in database:", updatedFolder);
 
     // Redirect or respond with success
-    res.redirect("/");
+    res.json({ success: true, message: "Folder renamed successfully!" });
   } catch (error) {
     console.error("Error renaming folder:", error);
     next(error);
@@ -199,9 +198,7 @@ const deleteFolder = async (req, res, next) => {
       where: { id: folderId },
     });
 
-    // Log database deletion success
-    console.log("Deleted folder from database:", deletedFolder);
-    res.redirect("/");
+    res.json({ success: true, message: "Folder deleted successfully!" });
   } catch (error) {
     console.error("Error deleting folder:", error);
     next(error);

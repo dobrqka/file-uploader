@@ -1,3 +1,17 @@
+const showLoadingModal = () => {
+  const modal = document.getElementById("loading-modal");
+  if (modal) {
+    modal.classList.remove("hidden");
+  }
+};
+
+const hideLoadingModal = () => {
+  const modal = document.getElementById("loading-modal");
+  if (modal) {
+    modal.classList.add("hidden");
+  }
+};
+
 document.getElementById("new-folder-btn").addEventListener("click", () => {
   const folderName = prompt("Enter the folder name:");
 
@@ -5,7 +19,7 @@ document.getElementById("new-folder-btn").addEventListener("click", () => {
     alert("Folder name is required!");
     return;
   }
-
+  showLoadingModal();
   fetch("/folder/create", {
     method: "POST",
     headers: {
@@ -13,7 +27,10 @@ document.getElementById("new-folder-btn").addEventListener("click", () => {
     },
     body: JSON.stringify({ folder: folderName }),
   })
-    .then((response) => response.json())
+    .then((response) => {
+      hideLoadingModal();
+      return response.json();
+    })
     .then((data) => {
       if (data.success) {
         alert("Folder created successfully!");
@@ -37,11 +54,15 @@ document.getElementById("new-folder-btn").addEventListener("click", () => {
         newFolderItem.appendChild(folderIcon);
         newFolderItem.appendChild(folderNameSpan);
         folderList.appendChild(newFolderItem);
+        window.location.reload();
       } else {
         alert("Failed to create folder.");
       }
     })
-    .catch((error) => console.error("Error:", error));
+    .catch((error) => {
+      console.error("Error:", error);
+      hideLoadingModal();
+    });
 });
 
 let selectedFolderId = null;
@@ -134,22 +155,26 @@ const hideInfo = (fileId) => {
 
 document.getElementById("download-btn").addEventListener("click", () => {
   if (selectedFileId !== null) {
+    showLoadingModal();
     // Send the request to download the selected file
     fetch(`/file/download/${selectedFileId}`, {
       method: "GET",
     })
       .then((response) => {
-        if (response.ok) {
-          // Create an invisible link element to trigger the download
+        hideLoadingModal();
+        return response.json();
+      }) // Parse the JSON response
+      .then((data) => {
+        if (data.downloadUrl) {
+          // Trigger the download using the file URL
           const downloadLink = document.createElement("a");
-          downloadLink.href = response.url; // Use the file URL from the response
-          downloadLink.download = true; // This forces the download
+          downloadLink.href = data.downloadUrl; // Use the file URL from the response
+          downloadLink.target = "_blank";
           downloadLink.click(); // Programmatically click the link
-        } else {
-          alert("Failed to download the file.");
         }
       })
       .catch((error) => {
+        hideLoadingModal();
         console.error("Error:", error);
         alert("An error occurred while downloading the file.");
       });
@@ -160,10 +185,14 @@ document.getElementById("download-btn").addEventListener("click", () => {
 
 document.getElementById("delete-btn").addEventListener("click", () => {
   if (selectedFolderId) {
+    showLoadingModal();
     fetch(`/folder/delete/${selectedFolderId}`, {
       method: "POST",
     })
-      .then((response) => response.json())
+      .then((response) => {
+        hideLoadingModal();
+        return response.json();
+      })
       .then((data) => {
         if (data.success) {
           alert("Folder deleted successfully!");
@@ -177,16 +206,24 @@ document.getElementById("delete-btn").addEventListener("click", () => {
           // Reset the selected folder
           selectedFolderId = null;
           toggleToolbarButtons();
+          window.location.reload();
         } else {
           alert("Failed to delete folder.");
         }
       })
-      .catch((error) => console.error("Error:", error));
+      .catch((error) => {
+        hideLoadingModal();
+        console.error("Error:", error);
+      });
   } else if (selectedFileId) {
+    showLoadingModal();
     fetch(`/file/delete/${selectedFileId}`, {
       method: "POST",
     })
-      .then((response) => response.json())
+      .then((response) => {
+        hideLoadingModal();
+        return response.json();
+      })
       .then((data) => {
         if (data.success) {
           alert("File deleted successfully!");
@@ -198,18 +235,22 @@ document.getElementById("delete-btn").addEventListener("click", () => {
           // Reset the selected folder
           selectedFileId = null;
           toggleToolbarButtons();
+          window.location.reload();
         } else {
           alert("Failed to delete file.");
         }
       })
-      .catch((error) => console.error("Error:", error));
+      .catch((error) => {
+        hideLoadingModal();
+        console.error("Error:", error);
+      });
   }
 });
 
 document.getElementById("rename-btn").addEventListener("click", () => {
   if (selectedFolderId) {
     const newName = prompt("Please insert the new name of your folder.");
-
+    showLoadingModal();
     fetch(`/folder/rename/${selectedFolderId}`, {
       method: "POST",
       headers: {
@@ -217,7 +258,10 @@ document.getElementById("rename-btn").addEventListener("click", () => {
       },
       body: JSON.stringify({ newName }),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        hideLoadingModal();
+        return response.json();
+      })
       .then((data) => {
         if (data.success) {
           alert("Folder renamed successfully!");
@@ -227,14 +271,18 @@ document.getElementById("rename-btn").addEventListener("click", () => {
           folderElement.textContent = newName;
           selectedFolderId = null;
           toggleToolbarButtons();
+          window.location.reload();
         } else {
           alert("Failed to delete folder.");
         }
       })
-      .catch((error) => console.error("Error:", error));
+      .catch((error) => {
+        hideLoadingModal();
+        console.error("Error:", error);
+      });
   } else if (selectedFileId) {
     const newName = prompt("Please insert the new name of your file.");
-
+    showLoadingModal();
     fetch(`/file/rename/${selectedFileId}`, {
       method: "POST",
       headers: {
@@ -242,7 +290,10 @@ document.getElementById("rename-btn").addEventListener("click", () => {
       },
       body: JSON.stringify({ newName }),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        hideLoadingModal();
+        return response.json();
+      })
       .then((data) => {
         if (data.success) {
           alert("File renamed successfully!");
@@ -252,32 +303,36 @@ document.getElementById("rename-btn").addEventListener("click", () => {
           fileElement.textContent = newName;
           selectedFileId = null;
           toggleToolbarButtons();
+          window.location.reload();
         } else {
           alert("Failed to delete file.");
         }
       })
-      .catch((error) => console.error("Error:", error));
+      .catch((error) => {
+        hideLoadingModal();
+        console.error("Error:", error);
+      });
   }
 });
 
-// Get modal elements
+// Get upload modal elements
 const openModalButton = document.getElementById("open-upload-modal");
 const closeModalButton = document.getElementById("close-upload-modal");
 const modal = document.getElementById("upload-modal");
 
-// Show modal when the "Upload File" button is clicked
+// Show upload modal when the "Upload File" button is clicked
 openModalButton.addEventListener("click", () => {
   modal.classList.remove("hidden");
   modal.classList.add("flex");
 });
 
-// Hide modal when the "Close" button is clicked
+// Hide upload modal when the "Close" button is clicked
 closeModalButton.addEventListener("click", () => {
   modal.classList.add("hidden");
   modal.classList.remove("flex");
 });
 
-// Optional: Hide modal when clicked outside of the modal content
+// Optional: Hide upload modal when clicked outside of the modal content
 modal.addEventListener("click", (e) => {
   if (e.target === modal) {
     modal.classList.add("hidden");

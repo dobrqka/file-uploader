@@ -22,7 +22,6 @@ const uploadFile = (req, res) => {
         return res.status(400).json({ message: "Invalid folder ID" });
       }
 
-      // Get folder details from the database
       const folder = await prisma.folder.findUnique({
         where: { id: folderId },
       });
@@ -38,11 +37,10 @@ const uploadFile = (req, res) => {
           name: fileName,
           path: req.file.path,
           folderId: folderId,
-          size: req.file.size, // Store file size
+          size: req.file.size,
         },
       });
-
-      res.redirect("/");
+      res.json({ success: true, message: "File uploaded successfully!" });
     } catch (error) {
       res.status(500).json({
         message: "Error saving file to the database",
@@ -53,7 +51,6 @@ const uploadFile = (req, res) => {
 };
 
 const getPublicIdFromDatabase = async (fileId, prisma) => {
-  // Fetch the file and its folder details
   const file = await prisma.file.findUnique({
     where: { id: fileId },
     include: { folder: true },
@@ -66,7 +63,6 @@ const getPublicIdFromDatabase = async (fileId, prisma) => {
   let folderPath = "";
   let currentFolder = file.folder;
 
-  // Traverse the folder hierarchy
   while (currentFolder) {
     folderPath = `${currentFolder.name}/${folderPath}`;
     if (!currentFolder.parentId) break;
@@ -75,7 +71,6 @@ const getPublicIdFromDatabase = async (fileId, prisma) => {
     });
   }
 
-  // Construct the publicId
   const publicId = `${folderPath}${file.name}`;
   return { publicId, file };
 };
@@ -90,21 +85,18 @@ const downloadFile = async (req, res, next) => {
   try {
     const { publicId, file } = await getPublicIdFromDatabase(fileId, prisma);
 
-    // Define the resource types to check
     const resourceTypes = ["image", "video", "raw"];
     let resource = null;
 
-    // Try fetching the resource from Cloudinary
     for (const type of resourceTypes) {
       try {
         resource = await cloudinary.api.resource(publicId, {
           resource_type: type,
         });
         if (resource) {
-          break; // Stop checking once we find the resource
+          break;
         }
       } catch (error) {
-        // Continue to the next type if resource not found
         if (error.http_code !== 404) {
           console.error(`Error fetching resource of type ${type}:`, error);
         }
@@ -124,8 +116,7 @@ const downloadFile = async (req, res, next) => {
         ? `application/${resource.format}`
         : "application/octet-stream"
     );
-    // Stream the file from Cloudinary
-    res.redirect(fileUrl);
+    res.json({ downloadUrl: fileUrl });
   } catch (error) {
     console.error("Error downloading file:", error);
     next(error);
@@ -160,23 +151,19 @@ const deleteFile = async (req, res, next) => {
     const resourceTypes = ["image", "raw", "video"];
     let resource = null;
 
-    // Try fetching the resource from Cloudinary
     for (const type of resourceTypes) {
       try {
         await cloudinary.uploader.destroy(publicId, { resource_type: type });
       } catch (error) {
-        // Continue to the next type if resource not found
         if (error.http_code !== 404) {
           console.error(`Error fetching resource of type ${type}:`, error);
         }
       }
     }
-    // Delete the file from the database
     const deletedFile = await prisma.file.delete({
       where: { id: fileId },
     });
-    // Log database deletion success
-    res.redirect("/");
+    res.json({ success: true, message: "File deleted successfully!" });
   } catch (error) {
     console.error("Error deleting file:", error);
     next(error);
@@ -211,7 +198,6 @@ const renameFile = async (req, res, next) => {
     }
 
     const { publicId } = await getPublicIdFromDatabase(fileId, prisma);
-    // make the new one
     const pidSegments = publicId.split("/");
     pidSegments[pidSegments.length - 1] = newName;
     const newPublicId = pidSegments.join("/");
@@ -219,20 +205,16 @@ const renameFile = async (req, res, next) => {
     const resourceTypes = ["image", "raw", "video"];
     let resource = null;
 
-    // Try fetching the resource from Cloudinary
     for (const type of resourceTypes) {
       try {
-        // change public ID in Cloudinary
         await cloudinary.uploader.rename(publicId, newPublicId, {
           resource_type: type,
         });
-        // change display name
         await cloudinary.api.update(newPublicId, {
           resource_type: type,
           display_name: newName,
         });
       } catch (error) {
-        // Continue to the next type if resource not found
         if (error.http_code !== 404) {
           console.error(`Error fetching resource of type ${type}:`, error);
         }
@@ -243,13 +225,11 @@ const renameFile = async (req, res, next) => {
     pathSegments[pathSegments.length - 1] = newName;
     const newFilePath = pathSegments.join("/");
 
-    // Update the file name in the database
     const updatedFile = await prisma.file.update({
       where: { id: fileId },
       data: { name: newName, path: newFilePath },
     });
-    // Redirect or respond with success
-    res.redirect("/");
+    res.json({ success: true, message: "File renamed successfully!" });
   } catch (error) {
     console.error("Error renaming file:", error);
     next(error);
