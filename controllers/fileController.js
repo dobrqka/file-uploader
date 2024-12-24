@@ -2,6 +2,7 @@ const upload = require("../middleware/multerConfig");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const cloudinary = require("cloudinary").v2;
+const fetch = require("node-fetch");
 
 const uploadFile = (req, res) => {
   upload.single("file")(req, res, async (err) => {
@@ -40,7 +41,8 @@ const uploadFile = (req, res) => {
           size: req.file.size,
         },
       });
-      res.json({ success: true, message: "File uploaded successfully!" });
+      // res.json({ success: true, message: "File uploaded successfully!" });
+      res.redirect("/");
     } catch (error) {
       res.status(500).json({
         message: "Error saving file to the database",
@@ -108,15 +110,21 @@ const downloadFile = async (req, res, next) => {
     }
 
     const fileUrl = resource.secure_url;
-    // Send the file for download by setting appropriate headers
+    const downloadStream = await fetch(fileUrl);
+
+    // Set headers for download
     res.setHeader("Content-Disposition", `attachment; filename="${file.name}"`);
     res.setHeader(
       "Content-Type",
-      resource.format
+      resource.format === "txt"
+        ? "text/plain"
+        : resource.format
         ? `application/${resource.format}`
         : "application/octet-stream"
     );
-    res.json({ downloadUrl: fileUrl });
+
+    // Pipe the download stream to the response
+    downloadStream.body.pipe(res);
   } catch (error) {
     console.error("Error downloading file:", error);
     next(error);

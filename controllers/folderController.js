@@ -119,7 +119,6 @@ const renameFolder = async (req, res, next) => {
           resource_type: "image",
         }
       );
-      console.log("New folder created with placeholder");
     } catch (error) {
       console.warn(
         "Error creating new folder with placeholder:",
@@ -139,7 +138,6 @@ const renameFolder = async (req, res, next) => {
         resource_type: "video",
       });
       await cloudinary.api.delete_folder(`${oldFolderPath}`);
-      console.log(`Old folder deleted from Cloudinary: ${oldFolderPath}`);
     } catch (error) {
       console.warn("Error deleting old folder from Cloudinary:", error.message);
     }
@@ -149,9 +147,6 @@ const renameFolder = async (req, res, next) => {
       where: { id: folderId },
       data: { name: newName, path: newFolderPath },
     });
-
-    console.log("Folder renamed in database:", updatedFolder);
-
     // Redirect or respond with success
     res.json({ success: true, message: "Folder renamed successfully!" });
   } catch (error) {
@@ -179,7 +174,6 @@ const deleteFolder = async (req, res, next) => {
     }
 
     const folderPath = `${req.user.name}_root/${folder.name}`;
-    console.log(`Deleting resources with prefix: ${folderPath}`);
 
     await cloudinary.api.delete_resources_by_prefix(`${folderPath}`, {
       resource_type: "raw",

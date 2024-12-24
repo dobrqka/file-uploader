@@ -161,16 +161,15 @@ document.getElementById("download-btn").addEventListener("click", () => {
       method: "GET",
     })
       .then((response) => {
-        hideLoadingModal();
-        return response.json();
-      }) // Parse the JSON response
-      .then((data) => {
-        if (data.downloadUrl) {
-          // Trigger the download using the file URL
+        if (response.ok) {
+          hideLoadingModal();
+          // Create an invisible link element to trigger the download
           const downloadLink = document.createElement("a");
-          downloadLink.href = data.downloadUrl; // Use the file URL from the response
-          downloadLink.target = "_blank";
+          downloadLink.href = response.url; // Use the file URL from the response
+          downloadLink.download = true; // This forces the download
           downloadLink.click(); // Programmatically click the link
+        } else {
+          alert("Failed to download the file.");
         }
       })
       .catch((error) => {
